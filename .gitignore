@@ -1,0 +1,6 @@
+dataset/
+uploads/
+model/*.pth
+__pycache__/
+venv/
+.env
