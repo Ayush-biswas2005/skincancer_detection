@@ -5,5 +5,5 @@ CLASS_NAMES = [
     "df",
     "mel",
     "nv",
-    "vasc"
+    "vasc",
 ]
