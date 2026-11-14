@@ -1,0 +1,47 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Skin Lesion AI Prototype</title>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <main class="container">
+        <h1>Skin Lesion AI Prototype</h1>
+        <p class="notice">
+            Educational demonstration only. This tool cannot diagnose
+            skin cancer. Do not use its predictions for medical decisions.
+        </p>
+
+        <form method="POST" enctype="multipart/form-data">
+            <label for="image">Choose a lesion image (JPG or PNG)</label>
+            <input id="image" type="file" name="image"
+                   accept=".jpg,.jpeg,.png" required>
+            <button type="submit">Analyze Image</button>
+        </form>
+
+        {% if error %}
+            <p class="error">{{ error }}</p>
+        {% endif %}
+
+        {% if image_url %}
+            <h2>Uploaded image</h2>
+            <img class="preview" src="{{ image_url }}" alt="Uploaded image">
+        {% endif %}
+
+        {% if prediction %}
+            <section class="result">
+                <h2>Predicted category: {{ prediction.label }}</h2>
+                <p>Model score: {{ "%.1f"|format(prediction.score) }}%</p>
+                <p>
+                    This score is not a cancer probability or a measure
+                    of clinical certainty. The model may be wrong.
+                </p>
+            </section>
+        {% endif %}
+    </main>
+</body>
+</html>
