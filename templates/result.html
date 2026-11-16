@@ -1,22 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Prediction Results</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
-        a { text-decoration: none; color: #007bff; display: inline-block; margin-top: 20px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if is_valid %}Analysis Report — DermScan{% else %}Validation Rejected — DermScan{% endif %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h2>Analysis Results</h2>
-        <p><strong>Prediction:</strong> {{ prediction }}</p>
-        <p><strong>Confidence:</strong> {{ confidence }}</p>
-        <p>Uploaded Image: {{ image_filename }}</p>
-        <br>
-        <a href="/">← Upload Another Image</a>
+
+  <header class="sticky-nav">
+    <div class="nav-inner">
+      <a href="{{ url_for('index') }}" class="brand-mark">
+        <span class="brand-dot" style="{% if not is_valid %}background-color: #c93b2b;{% endif %}"></span>
+        DermScan Research
+      </a>
+      <span class="nav-meta">
+        {% if is_valid %}
+          Inference Complete · Verified Skin Specimen
+        {% else %}
+          Validation Halted · Specimen Rejected
+        {% endif %}
+      </span>
     </div>
+  </header>
+
+  <main class="split-studio">
+    <!-- Left Column: Diagnostic Readout OR Validation Failure -->
+    <section class="studio-left">
+      {% if is_valid %}
+        <div>
+          <p class="eyebrow">Classification Output</p>
+          <h1 id="fullClassName">{{ prediction }}</h1>
+          <p class="lead-copy" id="classDescription">
+            Probability distribution computed via Softmax layer across 7 dermatological classes.
+          </p>
+
+          <div class="result-metric">
+            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+              <div>
+                <p class="metric-label">Primary Class Code</p>
+                <p class="metric-value" style="text-transform: uppercase;">{{ prediction }}</p>
+              </div>
+              <div style="text-align: right;">
+                <p class="metric-label">Model Confidence</p>
+                <p class="metric-value">{{ confidence }}</p>
+              </div>
+            </div>
+
+            <div class="confidence-bar-wrap">
+              <div class="confidence-track">
+                <div class="confidence-fill" style="width: {{ confidence }};"></div>
+              </div>
+            </div>
+          </div>
+
+          <a href="{{ url_for('index') }}" class="btn-secondary">← Analyze Another Specimen</a>
+        </div>
+
+        <div class="taxonomy-strip">
+          <p class="taxonomy-title">Research Notice</p>
+          <p style="font-family: var(--font-sans); font-size: 13px; color: var(--ink-muted); line-height: 1.5;">
+            This tool is an experimental computer vision prototype trained on the HAM10000 dataset. Outputs represent statistical feature matches on validated skin images and do not constitute a clinical diagnosis.
+          </p>
+        </div>
+      {% else %}
+        <div>
+          <p class="eyebrow" style="color: #c93b2b;">Validation Gate · Rejected</p>
+          <h1 style="color: #c93b2b;">Invalid Image</h1>
+          <p class="lead-copy">
+            The uploaded image failed the multi-stage skin validation pipeline. Neural disease classification was immediately halted to prevent misleading medical outputs.
+          </p>
+
+          <div class="alert" style="background-color: #fdf2f2; border: 1px solid #f8b4b4; color: #9b1c1c; padding: 18px 20px; font-size: 15px; line-height: 1.5;">
+            <strong>Validation Warning:</strong><br>
+            {{ error_message or "Invalid Image! Please upload a clear photograph of human skin for accurate analysis." }}
+          </div>
+
+          <div style="margin: 24px 0; padding: 18px; background-color: var(--bg-primary); border: 1px solid var(--border-subtle); border-radius: var(--radius-main);">
+            <p class="taxonomy-title" style="margin-bottom: 8px;">Upload Guidelines for Skin Analysis</p>
+            <ul style="font-family: var(--font-sans); font-size: 13px; color: var(--ink-secondary); line-height: 1.6; padding-left: 20px;">
+              <li>Upload a clear, focused, high-resolution photograph of the affected skin area.</li>
+              <li>Ensure adequate natural or clinical lighting (avoid shadows, darkness, or flash glare).</li>
+              <li>Do not upload animals, landscapes, documents, objects, or non-skin photography.</li>
+              <li>For facial lesions, provide a macro close-up of the lesion rather than a full portrait.</li>
+            </ul>
+          </div>
+
+          <a href="{{ url_for('index') }}" class="btn-primary" style="display: inline-block; text-align: center; text-decoration: none; width: auto; padding: 14px 28px;">
+            ← Upload Valid Skin Image
+          </a>
+        </div>
+
+        <div class="taxonomy-strip">
+          <p class="taxonomy-title">Safety Guarantee</p>
+          <p style="font-family: var(--font-sans); font-size: 13px; color: var(--ink-muted); line-height: 1.5;">
+            In accordance with medical computer vision safety standards, this system strictly enforces skin-detection and quality checks prior to disease inference. Non-skin images are never provided with speculative diagnoses or confidence scores.
+          </p>
+        </div>
+      {% endif %}
+    </section>
+
+    <!-- Right Column: Specimen View -->
+    <section class="studio-right">
+      <div class="workstation-card">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+          <p class="eyebrow" style="margin-bottom: 0;">Evaluated Specimen</p>
+          {% if is_valid %}
+            <span class="tag" style="background-color: #edf7ed; color: #1e4620; border-color: #b7e1cd;">✓ Skin Verified</span>
+          {% else %}
+            <span class="tag" style="background-color: #fdf2f2; color: #9b1c1c; border-color: #f8b4b4;">✕ Rejected</span>
+          {% endif %}
+        </div>
+
+        <div class="preview-container" style="display: block; margin-top: 0;">
+          <img src="{{ url_for('uploaded_file', filename=image_filename) }}" alt="Uploaded specimen">
+          <div class="file-meta">
+            <span>{{ image_filename }}</span>
+            <span>{% if is_valid %}Classified (224×224){% else %}Rejected Before Inference{% endif %}</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  {% if is_valid %}
+  <script>
+    // Map HAM10000 short codes to clear editorial titles & descriptions
+    const classMap = {
+      'akiec': {
+        title: 'Actinic Keratoses (akiec)',
+        desc: 'Intraepithelial carcinoma / Bowen’s disease. Typically presents as rough, scaly patches on sun-exposed skin.'
+      },
+      'bcc': {
+        title: 'Basal Cell Carcinoma (bcc)',
+        desc: 'A common epithelial skin malignancy often presenting as pearly papules, telangiectatic nodules, or erythematous plaques.'
+      },
+      'bkl': {
+        title: 'Benign Keratosis-like Lesion (bkl)',
+        desc: 'Non-malignant growths including seborrheic keratoses and solar lentigines, often exhibiting waxy or hyperkeratotic surfaces.'
+      },
+      'df': {
+        title: 'Dermatofibroma (df)',
+        desc: 'Benign fibrous dermal nodule, commonly firm and hyperpigmented.'
+      },
+      'mel': {
+        title: 'Melanoma (mel)',
+        desc: 'Malignant melanocytic neoplasm characterized by asymmetry, border irregularity, and color variegation.'
+      },
+      'nv': {
+        title: 'Melanocytic Nevi (nv)',
+        desc: 'Benign proliferations of melanocytes (common moles) with generally uniform pigmentation and regular borders.'
+      },
+      'vasc': {
+        title: 'Vascular Lesion (vasc)',
+        desc: 'Benign vascular proliferations such as cherry angiomas, angiokeratomas, or pyogenic granulomas.'
+      }
+    };
+
+    const rawCode = "{{ prediction }}".trim().toLowerCase();
+    if (classMap[rawCode]) {
+      document.getElementById('fullClassName').textContent = classMap[rawCode].title;
+      document.getElementById('classDescription').textContent = classMap[rawCode].desc;
+    }
+  </script>
+  {% endif %}
 </body>
 </html>

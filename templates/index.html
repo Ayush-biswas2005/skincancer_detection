@@ -1,37 +1,121 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Skin Cancer Detection</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin-top: 50px; background-color: #f4f4f9; }
-        .container { background: white; padding: 30px; border-radius: 8px; display: inline-block; box-shadow: 0px 0px 10px rgba(0,0,0,0.1); }
-        input[type="file"] { margin: 20px 0; }
-        button { background: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .error { color: red; margin-top: 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DermScan — Clinical Lesion Analysis</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <h2>Skin Lesion Classification</h2>
-        <p>Upload a skin image for AI-powered analysis.</p>
-        
-        <!-- Flash messages for error handling -->
+
+  <header class="sticky-nav">
+    <div class="nav-inner">
+      <a href="{{ url_for('index') }}" class="brand-mark">
+        <span class="brand-dot"></span>
+        DermScan Research
+      </a>
+      <span class="nav-meta">Model: MobileNetV3-Small · 224×224</span>
+    </div>
+  </header>
+
+  <main class="split-studio">
+    <!-- Left Column: Editorial Context -->
+    <section class="studio-left">
+      <div>
+        <p class="eyebrow">Dermatological Computer Vision</p>
+        <h1>Structured skin lesion classification.</h1>
+        <p class="lead-copy">
+          Upload a clinical or dermoscopic photograph to evaluate morphological patterns across seven diagnostic categories using weighted neural inference.
+        </p>
+      </div>
+
+      <div class="taxonomy-strip">
+        <p class="taxonomy-title">Supported Diagnostic Classes (HAM10000)</p>
+        <div class="taxonomy-tags">
+          <span class="tag">akiec · Actinic Keratoses</span>
+          <span class="tag">bcc · Basal Cell Carcinoma</span>
+          <span class="tag">bkl · Benign Keratosis</span>
+          <span class="tag">df · Dermatofibroma</span>
+          <span class="tag">mel · Melanoma</span>
+          <span class="tag">nv · Melanocytic Nevi</span>
+          <span class="tag">vasc · Vascular Lesions</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Right Column: Interactive Workstation -->
+    <section class="studio-right">
+      <div class="workstation-card">
         {% with messages = get_flashed_messages() %}
           {% if messages %}
-            <div class="error">
-              {% for message in messages %}
-                <p>{{ message }}</p>
-              {% endfor %}
-            </div>
+            {% for message in messages %}
+              <div class="alert">{{ message }}</div>
+            {% endfor %}
           {% endif %}
         {% endwith %}
 
-        <form action="/predict" method="POST" enctype="multipart/form-data">
-            <input type="file" name="file" accept=".png, .jpg, .jpeg" required><br>
-            <button type="submit">Upload and Predict</button>
+        <form action="{{ url_for('predict') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+          <div class="dropzone" id="dropzone">
+            <input type="file" name="file" id="fileInput" accept=".png,.jpg,.jpeg" required>
+            <p class="dropzone-title">Select or drop lesion image</p>
+            <p class="dropzone-sub">Supports PNG, JPG, or JPEG · High-resolution macro preferred</p>
+          </div>
+
+          <div class="preview-container" id="previewContainer">
+            <img id="imagePreview" src="" alt="Selected lesion preview">
+            <div class="file-meta">
+              <span id="fileName">image.jpg</span>
+              <span id="fileSize">0 KB</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary" id="submitBtn">Run Diagnostic Inference</button>
         </form>
-    </div>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const fileInput = document.getElementById('fileInput');
+    const dropzone = document.getElementById('dropzone');
+    const previewContainer = document.getElementById('previewContainer');
+    const imagePreview = document.getElementById('imagePreview');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const uploadForm = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+
+    fileInput.addEventListener('change', function() {
+      const file = this.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+          imagePreview.src = e.target.result;
+          previewContainer.style.display = 'block';
+          fileName.textContent = file.name;
+          fileSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    ['dragenter', 'dragover'].forEach(evt => {
+      dropzone.addEventListener(evt, (e) => {
+        e.preventDefault();
+        dropzone.classList.add('dragover');
+      });
+    });
+
+    ['dragleave', 'drop'].forEach(evt => {
+      dropzone.addEventListener(evt, () => {
+        dropzone.classList.remove('dragover');
+      });
+    });
+
+    uploadForm.addEventListener('submit', function() {
+      submitBtn.textContent = 'Analyzing Tensor Activations...';
+      submitBtn.style.opacity = '0.75';
+    });
+  </script>
 </body>
 </html>
